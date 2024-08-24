@@ -297,8 +297,8 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
 
   };
 
-  const renderTextArea = (field: string, rows: number = 1) => (
-    <Flex direction="row" className="text-area-container" maxWidth="500px">
+  const renderTextArea = (field: string, rows: number = 1, width: string = '100%') => (
+    <Flex direction="row" className="text-area-container" style={{ width }}>
       <Flex direction="column" className="text-area" style={{ flex: 1 }}>
         <Text as="label" htmlFor={field}>
           {field === 'G' ? 'Genre' : field === 'T' ? 'Theme' : field === 'M' ? 'Mood' : field === 'CQ' ? 'Core Question' : field}
@@ -310,7 +310,10 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
           rows={rows}
           value={data[field as keyof typeof data]}
           onChange={(event) => setData((data) => ({ ...data, [field]: event.target.value }))}
-          style={getTextAreaStyle(textAreaStyle, field)}
+          style={{
+            ...getTextAreaStyle(textAreaStyle, field),
+            width: '100%', // Ensure the TextArea fills its container
+          }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           onFocus={() => handleFocus(field)}
@@ -374,20 +377,19 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                   <Box style={whiteContainerStyle}>
                     <Flex direction="column" align="center" style={{ width: '100%' }}>
                       
-                      <Grid columns="2" justify="center" gap="4">
-                          {renderTextArea('G')}
-                          {renderTextArea('T')}
-                          {renderTextArea('M', 3)}
-                          {renderTextArea('CQ', 3)}
-
-                      </Grid>
+                    <Grid columns="2" justify="center" gap="4">
+                  {renderTextArea('G', 1, '100%')}
+                  {renderTextArea('T', 1, '100%')}
+                  {renderTextArea('M', 3, '100%')}
+                  {renderTextArea('CQ', 3, '100%')}
+                </Grid>
                     </Flex>
                   </Box>
                 </Container>
                 <Container size="3" align="center">
                 <Box style={whiteContainerStyle}>
-                      {renderTextArea('SUM', 3)}
-                    </Box>
+              {renderTextArea('SUM', 3, '100%')}
+            </Box>
                   </Container>
                   <Container size="3" align="center">
                     <Box style={whiteContainerStyle}>
@@ -415,7 +417,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                       )}
                       {expanded && (
                         <>
-                          {Array.from({ length: 9 }, (_, i) => i + 1).map((i) => renderTextArea(`S${i}`, 5))}
+                          {Array.from({ length: 9 }, (_, i) => i + 1).map((i) => renderTextArea(`S${i}`, 5, '100%'))}
                         </>
                       )}
                     </Box>
