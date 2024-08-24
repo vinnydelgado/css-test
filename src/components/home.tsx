@@ -270,107 +270,48 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                   </Button>
                 </Flex>
                 <Container size="3" align="center">
-                <Box
-                    style={{
-                      backgroundColor: 'white',
-                      borderRadius: '16px',
-                      padding: '24px',
-                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                    }}
-                  >
-                  <Flex direction="column" align="center" style={{ width: '100%' }}>
-                    <Grid columns="2" justify="center">
-                      <Flex direction="row" className="text-area-container" maxWidth="500px">
-                        <Flex direction="column" className="text-area">
-                          <Text as="label" htmlFor="G">Genre</Text>
-                          <TextArea {...register("G")} radius="full" id="G" name="G" rows={1} value={data.G} onChange={(event) => setData((data) => ({ ...data, G: event.target.value }))} style={textAreaStyle}/>
-                        </Flex>
-                        <Button type="button" variant="solid" className="clear-button" onClick={() => clearField("G")} style={semiTransparentButtonStyle}>
-                          <svg
-                            width="15"
-                            height="15"
-                            viewBox="0 0 15 15"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z"
-                              fill="currentColor"
-                              fill-rule="evenodd"
-                              clip-rule="evenodd"
-                            />
-                          </svg>
-                        </Button>
-                      </Flex>
-                      <Flex direction="row" className="text-area-container" maxWidth="500px">
-                        <Flex direction="column" className="text-area">
-                          <Text as="label" htmlFor="T">Theme</Text>
-                          <TextArea {...register("T")} radius="full" id="T" name="T" rows={1} value={data.T} onChange={(event) => setData((data) => ({ ...data, T: event.target.value }))} style={textAreaStyle}/>
-                        </Flex>
-                        <Button type="button" variant="solid" className="clear-button" onClick={() => clearField("T")} style={semiTransparentButtonStyle}>
-                          <svg
-                            width="15"
-                            height="15"
-                            viewBox="0 0 15 15"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z"
-                              fill="currentColor"
-                              fill-rule="evenodd"
-                              clip-rule="evenodd"
-                            />
-                          </svg>
-                        </Button>
-                      </Flex>
-                      <Flex direction="row" className="text-area-container" maxWidth="500px" py="3">
-                        <Flex direction="column" className="text-area">
-                          <Text as="label" htmlFor="M">Mood</Text>
-                          <TextArea {...register("M")} radius="full" id="M" name="M" rows={3} value={data.M} onChange={(event) => setData((data) => ({ ...data, M: event.target.value }))} style={textAreaStyle}/>
-                        </Flex>
-                        <Button type="button" variant="solid" className="clear-button" onClick={() => clearField("M")} style={semiTransparentButtonStyle}>
-                          <svg
-                            width="15"
-                            height="15"
-                            viewBox="0 0 15 15"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z"
-                              fill="currentColor"
-                              fill-rule="evenodd"
-                              clip-rule="evenodd"
-                            />
-                          </svg>
-                        </Button>
-                      </Flex>
-                      <Flex direction="row" className="text-area-container" maxWidth="500px" py="3">
-                        <Flex direction="column" className="text-area">
-                          <Text as="label" htmlFor="CQ">Core Question</Text>
-                          <TextArea {...register("CQ")} id="CQ" name="CQ" rows={3} value={data.CQ} onChange={(event) => setData((data) => ({ ...data, CQ: event.target.value }))} radius="full" style={textAreaStyle}/>
-                        </Flex>
-                        <Button type="button" variant="solid" className="clear-button" onClick={() => clearField("CQ")} style={semiTransparentButtonStyle}>
-                          <svg
-                            width="15"
-                            height="15"
-                            viewBox="0 0 15 15"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z"
-                              fill="currentColor"
-                              fill-rule="evenodd"
-                              clip-rule="evenodd"
-                            />
-                          </svg>
-                        </Button>
-                      </Flex>
-                    </Grid>
-                  </Flex>
-                 </Box> 
+                  <Box style={whiteContainerStyle}>
+                    <Flex direction="column" align="center" style={{ width: '100%' }}>
+                      <Grid columns="2" justify="center">
+                        {['G', 'T', 'M', 'CQ'].map((field) => (
+                          <Flex key={field} direction="row" className="text-area-container" maxWidth="500px">
+                            <Flex direction="column" className="text-area" style={{ flex: 1 }}>
+                              <Text as="label" htmlFor={field}>
+                                {field === 'G' ? 'Genre' : field === 'T' ? 'Theme' : field === 'M' ? 'Mood' : 'Core Question'}
+                              </Text>
+                              <TextArea
+                                {...register(field)}
+                                id={field}
+                                name={field}
+                                rows={field === 'M' || field === 'CQ' ? 3 : 1}
+                                value={data[field as keyof typeof data]}
+                                onChange={(event) => setData((data) => ({ ...data, [field]: event.target.value }))}
+                                style={getTextAreaStyle(textAreaStyle, field)}
+                                onMouseMove={handleMouseMove}
+                                onMouseLeave={handleMouseLeave}
+                              />
+                            </Flex>
+                            <Button type="button" variant="solid" className="clear-button" onClick={() => clearField(field)} style={semiTransparentButtonStyle}>
+                              <svg
+                                width="15"
+                                height="15"
+                                viewBox="0 0 15 15"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z"
+                                  fill="currentColor"
+                                  fill-rule="evenodd"
+                                  clip-rule="evenodd"
+                                />
+                              </svg>
+                            </Button>
+                          </Flex>
+                        ))}
+                      </Grid>
+                    </Flex>
+                  </Box>
                 </Container>
                 <Container size="3" align="center">
                     <Box
@@ -386,14 +327,16 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                         <Flex direction="column" className="text-area" style={{ flex: 1 }}>
                           <Text as="label" htmlFor="SUM">Summary:</Text>
                           <TextArea 
-                            {...register("SUM")} 
-                            id="SUM" 
-                            name="SUM" 
-                            rows={3} 
-                            value={data.SUM} 
-                            onChange={(event) => setData((data) => ({ ...data, SUM: event.target.value }))} 
-                            radius="full"
-                            style={textAreaStyle}
+                      
+                      {...register("SUM")} 
+                      id="SUM" 
+                      name="SUM" 
+                      rows={3} 
+                      value={data.SUM} 
+                      onChange={(event) => setData((data) => ({ ...data, SUM: event.target.value }))} 
+                      style={getTextAreaStyle(textAreaStyle, "SUM")}
+                      onMouseMove={handleMouseMove}
+                      onMouseLeave={handleMouseLeave}
                             
                           />
                         </Flex>
