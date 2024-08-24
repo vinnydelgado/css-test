@@ -297,6 +297,45 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
 
   };
 
+  const renderTextArea = (field: string, rows: number = 1) => (
+    <Flex direction="row" className="text-area-container" maxWidth="500px">
+      <Flex direction="column" className="text-area" style={{ flex: 1 }}>
+        <Text as="label" htmlFor={field}>
+          {field === 'G' ? 'Genre' : field === 'T' ? 'Theme' : field === 'M' ? 'Mood' : field === 'CQ' ? 'Core Question' : field}
+        </Text>
+        <TextArea
+          {...register(field)}
+          id={field}
+          name={field}
+          rows={rows}
+          value={data[field as keyof typeof data]}
+          onChange={(event) => setData((data) => ({ ...data, [field]: event.target.value }))}
+          style={getTextAreaStyle(textAreaStyle, field)}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          onFocus={() => handleFocus(field)}
+          onBlur={handleBlur}
+        />
+      </Flex>
+      <Button type="button" variant="solid" className="clear-button" onClick={() => clearField(field)} style={semiTransparentButtonStyle}>
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 15 15"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z"
+            fill="currentColor"
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </Button>
+    </Flex>
+  );
+
   return (
     <>
       <Theme>
@@ -334,111 +373,20 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                 <Container size="3" align="center">
                   <Box style={whiteContainerStyle}>
                     <Flex direction="column" align="center" style={{ width: '100%' }}>
-                      <Grid columns="2" justify="center">
-                        {['G', 'T', 'M', 'CQ'].map((field) => (
-                          <Flex key={field} direction="row" className="text-area-container" maxWidth="500px">
-                            <Flex direction="column" className="text-area" style={{ flex: 1 }}>
-                              <Text as="label" htmlFor={field}>
-                                {field === 'G' ? 'Genre' : field === 'T' ? 'Theme' : field === 'M' ? 'Mood' : 'Core Question'}
-                              </Text>
-                              <TextArea
-                                {...register(field)}
-                                id={field}
-                                name={field}
-                                rows={field === 'M' || field === 'CQ' ? 3 : 1}
-                                value={data[field as keyof typeof data]}
-                                onChange={(event) => setData((data) => ({ ...data, [field]: event.target.value }))}
-                                style={getTextAreaStyle(textAreaStyle, field)}
-                                onMouseMove={handleMouseMove}
-                                onMouseLeave={handleMouseLeave}
-                                onFocus={() => handleFocus(field)}
-                                onBlur={handleBlur}
-                              />
-                            </Flex>
-                            <Button type="button" variant="solid" className="clear-button" onClick={() => clearField(field)} style={semiTransparentButtonStyle}>
-                              <svg
-                                width="15"
-                                height="15"
-                                viewBox="0 0 15 15"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z"
-                                  fill="currentColor"
-                                  fill-rule="evenodd"
-                                  clip-rule="evenodd"
-                                />
-                              </svg>
-                            </Button>
-                          </Flex>
-                        ))}
+                      
+                      <Grid columns="2" justify="center" gap="4">
+                          {renderTextArea('G')}
+                          {renderTextArea('T')}
+                          {renderTextArea('M', 3)}
+                          {renderTextArea('CQ', 3)}
+
                       </Grid>
                     </Flex>
                   </Box>
                 </Container>
                 <Container size="3" align="center">
-                    <Box
-                      style={{
-                        backgroundColor: 'white',
-                        borderRadius: '16px',
-                        padding: '24px',
-                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                        marginBottom: '24px',
-                      }}
-                    >
-                      <Flex direction="row" className="text-area-container" maxWidth="100%">
-                        <Flex direction="column" className="text-area" style={{ flex: 1 }}>
-                          <Text as="label" htmlFor="SUM">Summary:</Text>
-                          <TextArea 
-                      
-                      {...register("SUM")} 
-                      id="SUM" 
-                      name="SUM" 
-                      rows={3} 
-                      value={data.SUM} 
-                      onChange={(event) => setData((data) => ({ ...data, SUM: event.target.value }))} 
-                      style={getTextAreaStyle(textAreaStyle, "SUM")}
-                      onMouseMove={handleMouseMove}
-                      onMouseLeave={handleMouseLeave}
-                            
-                          />
-                        </Flex>
-                        <Flex direction="column" className="button-container">
-                          <Button type="button" variant="solid" className="clear-button" onClick={() => clearField("SUM")} style={semiTransparentButtonStyle}>
-                            <svg
-                              width="15"
-                              height="15"
-                              viewBox="0 0 15 15"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z"
-                                fill="currentColor"
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                              />
-                            </svg>
-                          </Button>
-                          <Button type="submit" onClick={(e) => { handleSubmit(handleSummary)(e) }} name="generate_summary" style={semiTransparentButtonStyle}>
-                            <svg
-                              width="15"
-                              height="15"
-                              viewBox="0 0 15 15"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M8.69667 0.0403541C8.90859 0.131038 9.03106 0.354857 8.99316 0.582235L8.0902 6.00001H12.5C12.6893 6.00001 12.8625 6.10701 12.9472 6.27641C13.0319 6.4458 13.0136 6.6485 12.8999 6.80001L6.89997 14.8C6.76167 14.9844 6.51521 15.0503 6.30328 14.9597C6.09135 14.869 5.96888 14.6452 6.00678 14.4178L6.90974 9H2.49999C2.31061 9 2.13748 8.893 2.05278 8.72361C1.96809 8.55422 1.98636 8.35151 2.09999 8.2L8.09997 0.200038C8.23828 0.0156255 8.48474 -0.0503301 8.69667 0.0403541ZM3.49999 8.00001H7.49997C7.64695 8.00001 7.78648 8.06467 7.88148 8.17682C7.97648 8.28896 8.01733 8.43723 7.99317 8.5822L7.33027 12.5596L11.5 7.00001H7.49997C7.353 7.00001 7.21347 6.93534 7.11846 6.8232C7.02346 6.71105 6.98261 6.56279 7.00678 6.41781L7.66968 2.44042L3.49999 8.00001Z"
-                                fill="currentColor"
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                              />
-                            </svg>
-                          </Button>
-                        </Flex>
-                      </Flex>
+                <Box style={whiteContainerStyle}>
+                      {renderTextArea('SUM', 3)}
                     </Box>
                   </Container>
                   <Container size="3" align="center">
@@ -467,47 +415,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                       )}
                       {expanded && (
                         <>
-                          {Array.from({ length: 9 }, (_, i) => i + 1).map((i) => (
-                            <Flex key={`S${i}`} direction="column" gap="2" bottom="4">
-                              <Text as="label" htmlFor={`S${i}`}>S{i}:</Text>
-                              <Flex direction="row" align="center" gap="2">
-                                <Box style={{ flex: 1 }}>
-                                  <TextArea
-                            {...register(`S${i}`)}
-                            id={`S${i}`}
-                            name={`S${i}`}
-                            rows={5}
-                            value={data[`S${i}` as keyof typeof data]}
-                            onChange={(event) => setData((data) => ({ ...data, [`S${i}`]: event.target.value }))} 
-                            style={getTextAreaStyle(textAreaStyle, `S${i}`)}
-                            onMouseMove={handleMouseMove}
-                            onMouseLeave={handleMouseLeave}
-                                  />
-                                </Box>
-                                <Button 
-                                  type="button" 
-                                  variant="solid" 
-                                  onClick={() => clearField(`S${i}`)}
-                                  style={{ ...semiTransparentButtonStyle, alignSelf: 'flex-start', marginTop: '4px' }}
-                                >
-                                  <svg
-                                    width="15"
-                                    height="15"
-                                    viewBox="0 0 15 15"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path
-                                      d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z"
-                                      fill="currentColor"
-                                      fill-rule="evenodd"
-                                      clip-rule="evenodd"
-                                    />
-                                  </svg>
-                                </Button>
-                              </Flex>
-                            </Flex>
-                          ))}
+                          {Array.from({ length: 9 }, (_, i) => i + 1).map((i) => renderTextArea(`S${i}`, 5))}
                         </>
                       )}
                     </Box>
