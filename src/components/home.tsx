@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Amplify } from 'aws-amplify';
 import Header from './header';
 import { useForm } from "react-hook-form";
@@ -10,9 +10,11 @@ import config from '../aws-exports';
 import { Theme, Flex, Text, Button, Grid, TextArea, Box, Container } from '@radix-ui/themes';
 import axios from 'axios';
 import '@radix-ui/themes/styles.css';
-import './home.css'; // Import the CSS file
+import './home.css';
 
 Amplify.configure(config);
+
+
 
 export function Home({ signOut, user }: WithAuthenticatorProps) {
   const [data, setData] = useState({
@@ -31,10 +33,6 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     S8: '',
     S9: '',
   });
-
-  const [expanded, setExpanded] = useState(false); // State to control visibility of segments
-
-  const { register, handleSubmit } = useForm();
 
   const summary = async (formData: any) => {
     return await axios.post('https://8y8kvy7r77.execute-api.us-east-1.amazonaws.com/alpha/summary', {
@@ -136,28 +134,52 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
 
   const clearField = (segmentId: string) => {
     console.log("clear field " + segmentId);
-    console.log(data.S1 + 5);
     setData((data) => ({ ...data, [segmentId]: "" }));
-    console.log(data.S1 + 5);
   };
+
+
+  const [expanded, setExpanded] = useState(false);
+  const [hoveredTextArea, setHoveredTextArea] = useState<string | null>(null);
+  const [focusedTextArea, setFocusedTextArea] = useState<string | null>(null);
+  const [flickerState, setFlickerState] = useState<'off' | 'on1' | 'off2' | 'on2'>('off');
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const { register, handleSubmit } = useForm();
+
   const semiTransparentButtonStyle = {
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     color: '#333',
-    border: '1px solid rgba(0, 0, 0, 0.2)', // Thinner, more transparent border
+    border: '1px solid rgba(0, 0, 0, 0.2)',
     backdropFilter: 'blur(5px)',
     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
     transition: 'all 0.3s ease',
     '&:hover': {
       backgroundColor: 'rgba(255, 255, 255, 0.5)',
       boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)',
-      border: '1px solid rgba(0, 0, 0, 0.3)', // Slightly more visible on hover
+      border: '1px solid rgba(0, 0, 0, 0.3)',
     },
     '&:active': {
       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
       transform: 'translateY(1px)',
     },
   };
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  const textAreaStyle = {
+    width: '100%',
+    border: '1px solid rgba(0, 0, 0, 0.2)',
+    borderRadius: '8px',
+    padding: '10px',
+    transition: 'box-shadow 0.2s ease-in-out',
+    boxShadow: '0 6px 10px rgba(0, 0, 0, 0.1)',
+  };
+
+  const whiteContainerStyle = {
+    backgroundColor: 'white',
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1)',
+    marginBottom: '24px',
+  };
 
   const handleMouseMove = (event: React.MouseEvent<HTMLTextAreaElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -171,47 +193,87 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     setHoveredTextArea(null);
   };
 
-  const [hoveredTextArea, setHoveredTextArea] = useState<string | null>(null);
+  const flickerTiming = {
+    initialDelay: 0,    // Delay before the first color change
+    firstFlash: 150,     // Duration of the first color (on1)
+    blackOut: 100,       // Duration of the black color (off2)
+    finalColor: 100,    // When the final color appears after focus
+  };
+
+  const handleFocus = (id: string) => {
+    setFocusedTextArea(id);
+    
+    // Initial color change
+    setTimeout(() => {
+      setFlickerState('on1');
+      
+      // Change to black
+      setTimeout(() => {
+        setFlickerState('off2');
+        
+        // Change to final color
+        setTimeout(() => {
+          setFlickerState('on2');
+        }, flickerTiming.blackOut);
+        
+      }, flickerTiming.firstFlash);
+      
+    }, flickerTiming.initialDelay);
+  };
+
+  const handleBlur = () => {
+    setFocusedTextArea(null);
+    setFlickerState('off');
+  };
+
+
 
   const getTextAreaStyle = (baseStyle: React.CSSProperties, id: string) => {
-    if (hoveredTextArea !== id) {
-      return baseStyle;
+    const isHovered = hoveredTextArea === id;
+    const isFocused = focusedTextArea === id;
+
+    let style = { ...baseStyle };
+
+    if (isHovered || isFocused) {
+      const { x, y } = mousePosition;
+      const centerX = x - 150;
+      const centerY = y - 75;
+      const angle = Math.atan2(centerY, centerX);
+      const distance = Math.min(Math.sqrt(centerX * centerX + centerY * centerY), 150);
+      const shadowX = Math.cos(angle) * distance * 0.1;
+      const shadowY = Math.sin(angle) * distance * 0.1;
+
+      style.boxShadow = `0 4px 6px rgba(0, 0, 0, 0.1), 
+                         ${shadowX}px ${shadowY}px 30px rgba(0, 0, 0, 0.2), 
+                         ${-shadowX}px ${-shadowY}px 30px rgba(255, 255, 255, 0.4)`;
     }
 
-    const { x, y } = mousePosition;
-    const centerX = x - 150; // Assuming the text area is about 300px wide
-    const centerY = y - 75;  // Assuming the text area is about 150px tall
-    const angle = Math.atan2(centerY, centerX);
-    const distance = Math.min(Math.sqrt(centerX * centerX + centerY * centerY), 150);
-    const shadowX = Math.cos(angle) * distance * 0.1;
-    const shadowY = Math.sin(angle) * distance * 0.1;
+    if (isFocused) {
+      switch (flickerState) {
+        case 'on1':
+          style.border = '2px solid rgba(0, 255, 255, 1)';
+          // No additional glow for the first flash
+          break;
+        case 'off2':
+          style.border = '2px solid rgba(0, 255, 255, 0)';
+          break;
+        case 'on2':
+          style.border = '2px solid rgba(0, 255, 255, 1)';
+          style.boxShadow += ', 0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(0, 255, 255, 0.5)';
+          break;
+        default:
+          style.border = '2px solid rgba(0, 0, 0, 0.2)';
+      }
+    } else {
+      style.border = '2px solid rgba(0, 0, 0, 0.2)';
+    }
 
-    return {
-      ...baseStyle,
-      boxShadow: `0 4px 6px rgba(0, 0, 0, 0.1), 
-                  ${shadowX}px ${shadowY}px 30px rgba(0, 0, 0, 0.2), 
-                  ${-shadowX}px ${-shadowY}px 30px rgba(255, 255, 255, 0.4)`,
-      border: '1px solid rgba(0, 0, 0, 0.4)',
-      outline: 'none',
-    };
+    style.transition = 'border-color 0.05s ease-in-out';
+
+    return style;
   };
+  
 
-
-  const textAreaStyle = {
-    width: '100%',
-    border: '1px solid rgba(0, 0, 0, 0.2)',
-    borderRadius: '8px',
-    padding: '10px',
-    transition: 'box-shadow 0.2s ease-in-out',
-    boxShadow: '0 6px 10px rgba(0, 0, 0, 0.1)',
-  };  
-  const whiteContainerStyle = {
-    backgroundColor: 'white',
-    borderRadius: '16px',
-    padding: '24px',
-    boxShadow: '0 10px 20px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1)', // Stronger shadow and outline
-    marginBottom: '24px',
-  };
   const clearAllFields = () => {
     console.log("clear all fields");
     setData((data) => ({
@@ -289,6 +351,8 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                                 style={getTextAreaStyle(textAreaStyle, field)}
                                 onMouseMove={handleMouseMove}
                                 onMouseLeave={handleMouseLeave}
+                                onFocus={() => handleFocus(field)}
+                                onBlur={handleBlur}
                               />
                             </Flex>
                             <Button type="button" variant="solid" className="clear-button" onClick={() => clearField(field)} style={semiTransparentButtonStyle}>
