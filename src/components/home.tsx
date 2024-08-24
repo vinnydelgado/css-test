@@ -14,6 +14,17 @@ import './home.css';
 
 Amplify.configure(config);
 
+const customStyles = `
+  textarea::selection {
+    background-color: rgba(255, 140, 0, 0.3); /* Light orange background */
+    color: inherit; /* Keep the text color */
+  }
+  
+  textarea::-moz-selection {
+    background-color: rgba(255, 140, 0, 0.3);
+    color: inherit;
+  }
+`;
 
 
 export function Home({ signOut, user }: WithAuthenticatorProps) {
@@ -251,15 +262,15 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     if (isFocused) {
       switch (flickerState) {
         case 'on1':
-          style.border = '2px solid rgba(0, 255, 255, 1)';
+          style.border = '2px solid #FF8C00';
           // No additional glow for the first flash
           break;
         case 'off2':
-          style.border = '2px solid rgba(0, 255, 255, 0)';
+          style.border = '2px solid rgba(255, 140, 0, 0)';
           break;
         case 'on2':
-          style.border = '2px solid rgba(0, 255, 255, 1)';
-          style.boxShadow += ', 0 0 10px rgba(0, 255, 255, 0.7), 0 0 20px rgba(0, 255, 255, 0.5)';
+          style.border = '2px solid #FF8C00';
+          style.boxShadow += ', 0 0 10px rgba(255, 140, 0, 0.7), 0 0 20px rgba(255, 140, 0, 0.5)';
           break;
         default:
           style.border = '2px solid rgba(0, 0, 0, 0.2)';
@@ -268,7 +279,10 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
       style.border = '2px solid rgba(0, 0, 0, 0.2)';
     }
 
-    style.transition = 'border-color 0.05s ease-in-out';
+    style.transition = 'border-color 0.05s ease-in-out, box-shadow 0.05s ease-in-out';
+    style.outline = 'none';
+    style.WebkitTapHighlightColor = 'transparent';
+
 
     return style;
   };
@@ -312,7 +326,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
           onChange={(event) => setData((data) => ({ ...data, [field]: event.target.value }))}
           style={{
             ...getTextAreaStyle(textAreaStyle, field),
-            width: '100%', // Ensure the TextArea fills its container
+            width: '100%',
           }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
@@ -341,6 +355,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
 
   return (
     <>
+      <style>{customStyles}</style>
       <Theme>
         <div className="app-container">
           <Header />
