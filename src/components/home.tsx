@@ -15,6 +15,10 @@ import './home.css';
 Amplify.configure(config);
 
 const customStyles = `
+
+textarea, input, button {
+  font-family: 'Courier', monospace;
+
   textarea::selection {
     background-color: rgba(255, 140, 0, 0.3); /* Light orange background */
     color: inherit; /* Keep the text color */
@@ -23,6 +27,8 @@ const customStyles = `
   textarea::-moz-selection {
     background-color: rgba(255, 140, 0, 0.3);
     color: inherit;
+  }
+
   }
 `;
 
@@ -162,15 +168,13 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     color: '#333',
     border: '1px solid rgba(0, 0, 0, 0.2)',
     backdropFilter: 'blur(5px)',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    boxShadow: 'none', // Remove any shadow from the button itself
     transition: 'all 0.3s ease',
     '&:hover': {
       backgroundColor: 'rgba(255, 255, 255, 0.5)',
-      boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)',
       border: '1px solid rgba(0, 0, 0, 0.3)',
     },
     '&:active': {
-      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
       transform: 'translateY(1px)',
     },
   };
@@ -206,7 +210,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
 
   const flickerTiming = {
     initialDelay: 0,    // Delay before the first color change
-    firstFlash: 150,     // Duration of the first color (on1)
+    firstFlash: 250,     // Duration of the first color (on1)
     blackOut: 100,       // Duration of the black color (off2)
     finalColor: 100,    // When the final color appears after focus
   };
@@ -237,40 +241,65 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     setFlickerState('off');
   };
 
+  const [customLabels, setCustomLabels] = useState({
+    SUM: 'Summary',
+    S1: 'Introduction and Stasis',
+    S2: 'Inciting Incident',
+    S3: 'Comittment',
+    S4: 'First Pinch Point',
+    S5: 'Midpoint',
+    S6: 'Second Pinch Point',
+    S7: 'Second Plot Point',
+    S8: 'Climax',
+    S9: 'Resolution'
+  });
 
 
   const getTextAreaStyle = (baseStyle: React.CSSProperties, id: string) => {
     const isHovered = hoveredTextArea === id;
     const isFocused = focusedTextArea === id;
-
+  
     let style = { ...baseStyle };
-
+  
+    const orangeColor = '#FF8C00';
+    const orangeShadow = `0 0 10px ${orangeColor}40, 0 0 20px ${orangeColor}20, 0 0 30px ${orangeColor}10`; // Added a third, more spread out shadow
+  
     if (isHovered || isFocused) {
       const { x, y } = mousePosition;
-      const centerX = x - 150;
-      const centerY = y - 75;
-      const angle = Math.atan2(centerY, centerX);
-      const distance = Math.min(Math.sqrt(centerX * centerX + centerY * centerY), 150);
-      const shadowX = Math.cos(angle) * distance * 0.1;
-      const shadowY = Math.sin(angle) * distance * 0.1;
-
-      style.boxShadow = `0 4px 6px rgba(0, 0, 0, 0.1), 
-                         ${shadowX}px ${shadowY}px 30px rgba(0, 0, 0, 0.2), 
-                         ${-shadowX}px ${-shadowY}px 30px rgba(255, 255, 255, 0.4)`;
+      const width = 300; // Adjust based on your text area's actual width
+      const height = 150; // Adjust based on your text area's actual height
+      
+      const distanceX = Math.max(0, width - x);
+      const distanceY = Math.max(0, height - y);
+      
+      const angle = Math.atan2(distanceY, distanceX);
+      
+      const shadowDistance = Math.min(Math.sqrt(distanceX * distanceX + distanceY * distanceY), 20);
+      const shadowX = Math.cos(angle) * shadowDistance;
+      const shadowY = Math.sin(angle) * shadowDistance;
+  
+      const dynamicShadow = `
+        ${shadowX}px ${shadowY}px 10px rgba(0, 0, 0, 0.1),
+        ${shadowX * 1.5}px ${shadowY * 1.5}px 20px rgba(0, 0, 0, 0.05),
+        ${shadowX * 2}px ${shadowY * 2}px 30px rgba(0, 0, 0, 0.025)
+      `;
+  
+      style.boxShadow = dynamicShadow;
     }
-
+  
     if (isFocused) {
       switch (flickerState) {
         case 'on1':
-          style.border = '2px solid #FF8C00';
-          // No additional glow for the first flash
+          style.border = `2px solid ${orangeColor}`;
+          // No orange shadow during initial flash
           break;
         case 'off2':
-          style.border = '2px solid rgba(255, 140, 0, 0)';
+          style.border = `2px solid ${orangeColor}00`; // Fully transparent
+          style.boxShadow = 'none';
           break;
         case 'on2':
-          style.border = '2px solid #FF8C00';
-          style.boxShadow += ', 0 0 10px rgba(255, 140, 0, 0.7), 0 0 20px rgba(255, 140, 0, 0.5)';
+          style.border = `2px solid ${orangeColor}`;
+          style.boxShadow = `${style.boxShadow}, ${orangeShadow}`;
           break;
         default:
           style.border = '2px solid rgba(0, 0, 0, 0.2)';
@@ -278,12 +307,12 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     } else {
       style.border = '2px solid rgba(0, 0, 0, 0.2)';
     }
-
+  
+    style.fontFamily = "'Courier', monospace";
     style.transition = 'border-color 0.05s ease-in-out, box-shadow 0.05s ease-in-out';
     style.outline = 'none';
     style.WebkitTapHighlightColor = 'transparent';
-
-
+  
     return style;
   };
   
@@ -314,8 +343,14 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
   const renderTextArea = (field: string, rows: number = 1, width: string = '100%') => (
     <Flex direction="row" className="text-area-container" style={{ width }}>
       <Flex direction="column" className="text-area" style={{ flex: 1 }}>
-        <Text as="label" htmlFor={field}>
-          {field === 'G' ? 'Genre' : field === 'T' ? 'Theme' : field === 'M' ? 'Mood' : field === 'CQ' ? 'Core Question' : field}
+        <Text as="label" htmlFor={field} style={{ fontFamily: "'Courier', monospace" }}>
+          {field.startsWith('S') ? customLabels[field as keyof typeof customLabels] : 
+           (field === 'G' ? 'Genre' : 
+            field === 'T' ? 'Theme' : 
+            field === 'M' ? 'Mood' : 
+            field === 'CQ' ? 'Core Question' : 
+            field === 'SUM' ? 'Summary' : 
+            field)}
         </Text>
         <TextArea
           {...register(field)}
@@ -345,8 +380,8 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
           <path
             d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z"
             fill="currentColor"
-            fill-rule="evenodd"
-            clip-rule="evenodd"
+            fillRule="evenodd"
+            clipRule="evenodd"
           />
         </svg>
       </Button>
@@ -403,7 +438,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                 </Container>
                 <Container size="3" align="center">
                 <Box style={whiteContainerStyle}>
-              {renderTextArea('SUM', 3, '100%')}
+                  {renderTextArea('SUM', 3, '100%')}
             </Box>
                   </Container>
                   <Container size="3" align="center">
@@ -426,7 +461,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                                 clip-rule="evenodd"
                               />
                             </svg>
-                            Expand S1-S9
+                            Expand Story Segments
                           </Button>
                         </Flex>
                       )}
