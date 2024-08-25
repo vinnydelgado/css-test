@@ -196,6 +196,12 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     marginBottom: '24px',
   };
 
+  const widerWhiteContainerStyle = {
+    ...whiteContainerStyle,
+    width: '100%',
+    maxWidth: '1800px', // Adjust this value as needed
+  };
+
   const handleMouseMove = (event: React.MouseEvent<HTMLTextAreaElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -441,8 +447,8 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                   {renderTextArea('SUM', 3, '100%')}
             </Box>
                   </Container>
-                  <Container size="3" align="center">
-                    <Box style={whiteContainerStyle}>
+                  <Container size="4" align="center">
+                    <Box style={widerWhiteContainerStyle}>
                       {!expanded && (
                         <Flex justify="center" py="9">
                           <Button type="button" variant="solid" radius="full" style={{ ...semiTransparentButtonStyle, padding: '2rem 1rem' }} onClick={() => setExpanded(true)}>
@@ -467,7 +473,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                       )}
                       {expanded && (
                         <>
-                          {Array.from({ length: 9 }, (_, i) => i + 1).map((i) => renderTextArea(`S${i}`, 5, '100%'))}
+                          {Array.from({ length: 9 }, (_, i) => i + 1).map((i) => renderTextArea(`S${i}`, 4, '100%'))}
                         </>
                       )}
                     </Box>
