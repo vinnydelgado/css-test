@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Amplify } from 'aws-amplify';
 import Header from './header';
 import { useForm } from "react-hook-form";
@@ -13,6 +13,70 @@ import '@radix-ui/themes/styles.css';
 import './home.css';
 
 Amplify.configure(config);
+
+interface FloatingBoxProps {
+  expanded: boolean;
+  onClearAllFields: () => void;
+  semiTransparentButtonStyle: React.CSSProperties;
+  wrapperTopPosition: number;
+}
+
+const FloatingBox: React.FC<FloatingBoxProps> = ({ 
+  expanded, 
+  onClearAllFields, 
+  semiTransparentButtonStyle, 
+  wrapperTopPosition 
+}) => {
+  const [position, setPosition] = useState<'top' | 'side'>('top');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPercentage = (window.scrollY / document.documentElement.scrollHeight) * 100;
+      if (expanded && scrollPercentage > 5) {
+        setPosition('side');
+      } else {
+        setPosition('top');
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [expanded]);
+
+  const boxStyle: React.CSSProperties = {
+    
+    padding: '20px',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+    borderRadius: '8px',
+    transition: 'all 0.3s ease',
+    zIndex: 1000,
+    ...(position === 'top'
+      ? {
+          position: 'absolute',
+          top: `${wrapperTopPosition - 100}px`, // Position it 70px above the wrapper
+          left: '50%',
+          transform: 'translateX(-50%)',
+        }
+      : {
+          position: 'fixed',
+          top: '18%',
+          left: '18%',
+          transform: 'translateY(-5%)',
+        }),
+  };
+
+  return (
+    <Box style={boxStyle}>
+      <Button type="button" variant="solid" onClick={onClearAllFields} style={semiTransparentButtonStyle}>
+        Clear All Fields
+      </Button>
+    </Box>
+  );
+};
+
+
+
 
 const customStyles = `
 
@@ -148,6 +212,23 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
       console.log(e);
     }
   }
+
+  const [wrapperTopPosition, setWrapperTopPosition] = useState(0);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const updateWrapperPosition = () => {
+      if (wrapperRef.current) {
+        const rect = wrapperRef.current.getBoundingClientRect();
+        setWrapperTopPosition(rect.top + window.scrollY);
+      }
+    };
+
+    updateWrapperPosition();
+    window.addEventListener('resize', updateWrapperPosition);
+    return () => window.removeEventListener('resize', updateWrapperPosition);
+  }, []);
+
 
   const clearField = (segmentId: string) => {
     console.log("clear field " + segmentId);
@@ -404,44 +485,41 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
             <div style={{ width: '100%' }}>
               <img src={require("./banner_full_text.png")} alt="FilmAssistant AI Logo" style={{ width: '100%', height: 'auto' }} />
             </div>
-            <Flex direction="column" width="100%" align="center" className="text-areas-background">
-              <Box width="2500px" px="835px">
-                {/* Header has been moved above */}
-              </Box>
-              {/* New div for the overlay image */}
-              <div className="overlay-image"></div>
+            {/* Add space here */}
+            <div style={{ height: '100px' }}></div>
+            <FloatingBox 
+              expanded={expanded} 
+              onClearAllFields={clearAllFields}
+              semiTransparentButtonStyle={semiTransparentButtonStyle}
+              wrapperTopPosition={wrapperTopPosition}
+            />
+            <Flex direction="column" width="100%" align="center" className="text-areas-background" ref={wrapperRef}>
               <Box
                 style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)', // Semi-transparent white
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
                   borderRadius: '24px',
                   padding: '32px',
-                  backdropFilter: 'blur(10px)', // This creates a frosted glass effect
+                  backdropFilter: 'blur(10px)',
                   boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
                   border: '1px solid rgba(255, 255, 255, 0.3)',
-                  width: '90%', // Adjust as needed
-                  maxWidth: '1200px', // Adjust as needed
+                  width: '90%',
+                  maxWidth: '1200px',
                   margin: '20px 0',
                 }}
               >
-              <form>
-                <Flex justify="end" bottom="4" align="center">
-                  <Button type="button" variant="solid" onClick={clearAllFields} style={semiTransparentButtonStyle}>
-                    Clear All Fields
-                  </Button>
-                </Flex>
-                <Container size="3" align="center">
-                  <Box style={whiteContainerStyle}>
-                    <Flex direction="column" align="center" style={{ width: '100%' }}>
-                      
-                    <Grid columns="2" justify="center" gap="4">
-                  {renderTextArea('G', 1, '100%')}
-                  {renderTextArea('T', 1, '100%')}
-                  {renderTextArea('M', 3, '100%')}
-                  {renderTextArea('CQ', 3, '100%')}
-                </Grid>
-                    </Flex>
-                  </Box>
-                </Container>
+                <form>
+                  <Container size="3" align="center">
+                    <Box style={whiteContainerStyle}>
+                      <Flex direction="column" align="center" style={{ width: '100%' }}>
+                        <Grid columns="2" justify="center" gap="4">
+                          {renderTextArea('G', 1, '100%')}
+                          {renderTextArea('T', 1, '100%')}
+                          {renderTextArea('M', 3, '100%')}
+                          {renderTextArea('CQ', 3, '100%')}
+                        </Grid>
+                      </Flex>
+                    </Box>
+                  </Container>
                 <Container size="3" align="center">
                 <Box style={whiteContainerStyle}>
                   {renderTextArea('SUM', 3, '100%')}
