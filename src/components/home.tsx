@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, CSSProperties } from 'react';
 import { Amplify } from 'aws-amplify';
 import Header from './header';
 import { useForm } from "react-hook-form";
@@ -11,6 +11,9 @@ import { Theme, Flex, Text, Button, Grid, TextArea, Box, Container } from '@radi
 import axios from 'axios';
 import '@radix-ui/themes/styles.css';
 import './home.css';
+import orangeUnderlay from './Orange-test-2.png';
+import whiteOverlay from './Head-color with text.png';
+
 
 Amplify.configure(config);
 
@@ -19,51 +22,71 @@ interface FloatingBoxProps {
   onClearAllFields: () => void;
   semiTransparentButtonStyle: React.CSSProperties;
   wrapperTopPosition: number;
+  wrapperWidth: number;
 }
 
 const FloatingBox: React.FC<FloatingBoxProps> = ({ 
   expanded, 
   onClearAllFields, 
   semiTransparentButtonStyle, 
-  wrapperTopPosition 
+  wrapperTopPosition,
+  wrapperWidth
 }) => {
-  const [position, setPosition] = useState<'top' | 'side'>('top');
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const initialPositionRef = useRef(wrapperTopPosition);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollPercentage = (window.scrollY / document.documentElement.scrollHeight) * 100;
-      if (expanded && scrollPercentage > 5) {
-        setPosition('side');
-      } else {
-        setPosition('top');
-      }
+    initialPositionRef.current = wrapperTopPosition;
+  }, [wrapperTopPosition]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
     };
 
+    const handleScroll = () => {
+      setScrollPosition(window.scrollY);
+    };
+
+    window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [expanded]);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  const calculateBoxPosition = () => {
+    const startPosition = initialPositionRef.current;
+    const endPosition = Math.max(100, startPosition); // Ensure endPosition is not above startPosition
+    const scrollThreshold = 500; // Adjust this value to control how quickly the box reaches its final position
+
+    if (!expanded) {
+      return startPosition;
+    }
+
+    const newTopPosition = Math.max(
+      endPosition,
+      startPosition - scrollPosition * ((startPosition - endPosition) / scrollThreshold)
+    );
+
+    // Ensure the box never goes above its initial position
+    return Math.max(newTopPosition, startPosition);
+  };
 
   const boxStyle: React.CSSProperties = {
-    
     padding: '20px',
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     borderRadius: '8px',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Ease-in-out transition
     zIndex: 1000,
-    ...(position === 'top'
-      ? {
-          position: 'absolute',
-          top: `${wrapperTopPosition - 100}px`, // Position it 70px above the wrapper
-          left: '50%',
-          transform: 'translateX(-50%)',
-        }
-      : {
-          position: 'fixed',
-          top: '18%',
-          left: '18%',
-          transform: 'translateY(-5%)',
-        }),
+    width: '150px', // Adjust as needed
+    position: expanded ? 'fixed' : 'absolute',
+    top: `${calculateBoxPosition()}px`,
+    left: `${(windowWidth - wrapperWidth) / 2 - 180}px`, // 180px = 150px (width) + 30px (gap)
   };
 
   return (
@@ -475,38 +498,105 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     </Flex>
   );
 
+
+  const [wrapperWidth, setWrapperWidth] = useState(0);
+
+
+  useEffect(() => {
+    const updateWrapperDimensions = () => {
+      if (wrapperRef.current) {
+        const rect = wrapperRef.current.getBoundingClientRect();
+        setWrapperTopPosition(rect.top + window.scrollY);
+        setWrapperWidth(rect.width);
+      }
+    };
+
+    updateWrapperDimensions();
+    window.addEventListener('resize', updateWrapperDimensions);
+    window.addEventListener('scroll', updateWrapperDimensions);
+    return () => {
+      window.removeEventListener('resize', updateWrapperDimensions);
+      window.removeEventListener('scroll', updateWrapperDimensions);
+    };
+  }, []);
+
+  const gradientStyle: CSSProperties = {
+    background: 'linear-gradient(90deg, #fea57e 0%,#fea57e 20%, #fad496 55%, #fe854f 100%)',
+    minHeight: '100vh',
+    width: '100%',
+    position: 'fixed' as 'fixed',
+    top: 0,
+    left: 0,
+    zIndex: -1,
+  };
+
+  const bannerContainerStyle = {
+    width: '100%', 
+    position: 'relative' as const, // Type assertion to avoid TypeScript error
+    overflow: 'hidden',
+    height: '150px', // Adjust this value as needed
+  };
+  const orangeShapeStyle = {
+    content: '""',
+    //background: 'linear-gradient(140deg, #fea57e 0%,#fea57e 35%, #FFFFFF 100%)',
+    position: 'absolute' as const, // Type assertion
+    top: 'auto',
+    left: '-25%',
+    width: '150%',
+    height: '100%',
+    //backgroundColor: '#fea57e', // Light orange color
+    borderRadius: '0 0 0% 0%',
+    zIndex: -1,
+  };
+
   return (
     <>
       <style>{customStyles}</style>
       <Theme>
         <div className="app-container">
+        <div style={gradientStyle}></div>
           <Header />
-          <Flex direction="column" justify="center" align="center" style={{ flexGrow: 1 }}>
-            <div style={{ width: '100%' }}>
-              <img src={require("./banner_full_text.png")} alt="FilmAssistant AI Logo" style={{ width: '100%', height: 'auto' }} />
-            </div>
-            {/* Add space here */}
-            <div style={{ height: '100px' }}></div>
-            <FloatingBox 
-              expanded={expanded} 
-              onClearAllFields={clearAllFields}
-              semiTransparentButtonStyle={semiTransparentButtonStyle}
-              wrapperTopPosition={wrapperTopPosition}
-            />
-            <Flex direction="column" width="100%" align="center" className="text-areas-background" ref={wrapperRef}>
-              <Box
+          <Flex direction="column" justify="center" align="center" style={{ flexGrow: 1, position: 'relative' }}>
+          <div style={bannerContainerStyle}>
+  {/* CSS Shape (Orange Underlay) */}
+            <div style={orangeShapeStyle}></div>
+
+              {/* White Overlay (Image 2) */}
+              <img 
+                src={whiteOverlay} 
+                alt="White overlay" 
                 style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  borderRadius: '24px',
-                  padding: '32px',
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  width: '90%',
-                  maxWidth: '1200px',
-                  margin: '20px 0',
+                  width: 'auto',
+                  height: '200px',
+                  position: 'absolute',
+                  top: 'auto',
+                  left: '25%',
+                  opacity: 1, // Adjust this value to control the overlay intensity
                 }}
-              >
+              />
+
+            </div>
+            <Flex style={{ width: '100%', justifyContent: 'center', position: 'relative' }}>
+              <FloatingBox 
+                expanded={expanded} 
+                onClearAllFields={clearAllFields}
+                semiTransparentButtonStyle={semiTransparentButtonStyle}
+                wrapperTopPosition={wrapperTopPosition}
+                wrapperWidth={wrapperWidth}
+              />
+              <Flex direction="column" width="90%" maxWidth="1200px" align="center" className="text-areas-background" ref={wrapperRef}>
+                <Box
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    borderRadius: '24px',
+                    padding: '32px',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    width: '100%',
+                    margin: '20px 0',
+                  }}
+                >
                 <form>
                   <Container size="3" align="center">
                     <Box style={whiteContainerStyle}>
@@ -564,6 +654,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                 </form>
               </Box>
             </Flex>
+           </Flex> 
           </Flex>
         </div>
         <Button type="button" variant="solid" onClick={signOut} style={semiTransparentButtonStyle}>Sign out</Button>
