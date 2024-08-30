@@ -21,85 +21,41 @@ interface FloatingBoxProps {
   expanded: boolean;
   onClearAllFields: () => void;
   semiTransparentButtonStyle: React.CSSProperties;
-  wrapperTopPosition: number;
-  wrapperWidth: number;
+  onToggle: () => void;
 }
-
 const FloatingBox: React.FC<FloatingBoxProps> = ({ 
   expanded, 
   onClearAllFields, 
-  semiTransparentButtonStyle, 
-  wrapperTopPosition,
-  wrapperWidth
+  semiTransparentButtonStyle,
+  onToggle
 }) => {
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const initialPositionRef = useRef(wrapperTopPosition);
-
-  useEffect(() => {
-    initialPositionRef.current = wrapperTopPosition;
-  }, [wrapperTopPosition]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
-
-    const handleScroll = () => {
-      setScrollPosition(window.scrollY);
-    };
-
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  const calculateBoxPosition = () => {
-    const startPosition = initialPositionRef.current;
-    const endPosition = Math.max(100, startPosition); // Ensure endPosition is not above startPosition
-    const scrollThreshold = 500; // Adjust this value to control how quickly the box reaches its final position
-
-    if (!expanded) {
-      return startPosition;
-    }
-
-    const newTopPosition = Math.max(
-      endPosition,
-      startPosition - scrollPosition * ((startPosition - endPosition) / scrollThreshold)
-    );
-
-    // Ensure the box never goes above its initial position
-    return Math.max(newTopPosition, startPosition);
-  };
-
   const boxStyle: React.CSSProperties = {
-    padding: '20px',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    borderRadius: '8px',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Ease-in-out transition
-    zIndex: 1000,
-    width: '150px', // Adjust as needed
-    position: expanded ? 'fixed' : 'absolute',
-    top: `${calculateBoxPosition()}px`,
-    left: `${(windowWidth - wrapperWidth) / 2 - 180}px`, // 180px = 150px (width) + 30px (gap)
+    padding: '15px',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backdropFilter: 'blur(10px)',
+    boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.1)',
+    borderRadius: '24px 24px 24px 24px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    width: '100%',
+    position: 'absolute',
+    top: expanded ? '0' : '-170%', // Adjust this value to control how much it peeks out
+    left: '0',
+    zIndex: 1,
   };
 
   return (
     <Box style={boxStyle}>
-      <Button type="button" variant="solid" onClick={onClearAllFields} style={semiTransparentButtonStyle}>
-        Clear All Fields
-      </Button>
+      <Flex justify="between" align="center">
+        <Button onClick={onClearAllFields} style={semiTransparentButtonStyle}>
+          Clear All Fields
+        </Button>
+        <Button onClick={onToggle} style={semiTransparentButtonStyle}>
+          {expanded ? 'Hide' : 'Expand'}
+        </Button>
+      </Flex>
     </Box>
   );
 };
-
-
-
 
 const customStyles = `
 
@@ -306,6 +262,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     maxWidth: '1800px', // Adjust this value as needed
   };
 
+
   const handleMouseMove = (event: React.MouseEvent<HTMLTextAreaElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -500,8 +457,12 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
 
 
   const [wrapperWidth, setWrapperWidth] = useState(0);
+  const [drawerExpanded, setDrawerExpanded] = useState(false);
 
-
+  const toggleDrawer = () => {
+    setDrawerExpanded(!drawerExpanded);
+  };
+  
   useEffect(() => {
     const updateWrapperDimensions = () => {
       if (wrapperRef.current) {
@@ -541,10 +502,10 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     //background: 'linear-gradient(140deg, #fea57e 0%,#fea57e 35%, #FFFFFF 100%)',
     position: 'absolute' as const, // Type assertion
     top: 'auto',
-    left: '-25%',
+    left: 'auto',
     width: '150%',
-    height: '100%',
-    //backgroundColor: '#fea57e', // Light orange color
+    height: '150px',
+    //backgroundColor: '#FFFFFF', // Light orange color
     borderRadius: '0 0 0% 0%',
     zIndex: -1,
   };
@@ -576,28 +537,52 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
               />
 
             </div>
-            <Flex style={{ width: '100%', justifyContent: 'center', position: 'relative' }}>
-              <FloatingBox 
-                expanded={expanded} 
-                onClearAllFields={clearAllFields}
-                semiTransparentButtonStyle={semiTransparentButtonStyle}
-                wrapperTopPosition={wrapperTopPosition}
-                wrapperWidth={wrapperWidth}
-              />
+            <Flex style={{ width: '100%', justifyContent: 'center', position: 'relative', paddingTop: '50px' }}>
+              <Flex style={{ width: '100%', justifyContent: 'center', position: 'relative' }}>
               <Flex direction="column" width="90%" maxWidth="1200px" align="center" className="text-areas-background" ref={wrapperRef}>
+              <Box
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  borderRadius: '24px',
+                  padding: '32px',
+                  paddingTop: '40px', // Adjust based on how much of the drawer you want to show
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  width: '100%',
+                  margin: '25px 0',
+                  position: 'relative',
+                  zIndex: 2,
+                }}
+              >
                 <Box
                   style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    borderRadius: '24px',
-                    padding: '32px',
-                    backdropFilter: 'blur(10px)',
-                    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    width: '100%',
-                    margin: '20px 0',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '40px', // This should match the amount of drawer peeking out
+                    overflow: 'visible',
+                    zIndex: 3,
+                    justifyContent: 'center',
                   }}
                 >
-                <form>
+                  <FloatingBox 
+                    expanded={drawerExpanded} 
+                    onClearAllFields={clearAllFields}
+                    semiTransparentButtonStyle={semiTransparentButtonStyle}
+                    onToggle={toggleDrawer}
+                    
+                  />
+                </Box>
+                <Box 
+                  style={{ 
+                    position: 'relative', 
+                    zIndex: 2,
+                    marginTop: '-10px', // Negative margin to offset the peeking drawer
+                  }}
+                >
+                    <form>
                   <Container size="3" align="center">
                     <Box style={whiteContainerStyle}>
                       <Flex direction="column" align="center" style={{ width: '100%' }}>
@@ -653,7 +638,9 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                   </Flex>
                 </form>
               </Box>
+            </Box> 
             </Flex>
+           </Flex> 
            </Flex> 
           </Flex>
         </div>
