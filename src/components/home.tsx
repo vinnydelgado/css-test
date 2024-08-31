@@ -17,45 +17,139 @@ import whiteOverlay from './Head-color with text.png';
 
 Amplify.configure(config);
 
+
 interface FloatingBoxProps {
   expanded: boolean;
   onClearAllFields: () => void;
   semiTransparentButtonStyle: React.CSSProperties;
   onToggle: () => void;
+  isScrolled: boolean;
+  wrapperWidth: number;
 }
+
 const FloatingBox: React.FC<FloatingBoxProps> = ({ 
   expanded, 
   onClearAllFields, 
   semiTransparentButtonStyle,
-  onToggle
+  onToggle,
+  isScrolled,
+  wrapperWidth
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   const boxStyle: React.CSSProperties = {
-    padding: '15px',
+    padding: '12px',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     backdropFilter: 'blur(10px)',
     boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.1)',
-    borderRadius: '24px 24px 24px 24px',
+    borderRadius: '24px',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    width: '100%',
     position: 'absolute',
-    top: expanded ? '0' : '-170%', // Adjust this value to control how much it peeks out
-    left: '0',
     zIndex: 1,
+    ...(isScrolled
+      ? {
+          top: '15px',
+          left: '102%',
+          width: 'auto',
+        }
+      : {
+          top: expanded ? '0' : '-170%',
+          left: '0',
+          width: '100%',
+        }),
+  };
+
+  const clearAllButtonStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    padding: 0,
+    overflow: 'hidden',
+    transition: 'all 0.3s ease',
+    width: isScrolled ? (isHovered ? '180px' : '40px') : '180px',
+    height: '40px',
+    borderRadius: '20px',
+    position: 'relative',
+    backgroundColor: 'white',
+    border: '1px solid rgba(0, 0, 0, 0.2)',
+    color: 'black',
+    cursor: 'pointer',
+    fontFamily: 'Arial, sans-serif',
+    fontSize: '14px',
+  };
+
+  const svgContainerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '38px',
+    height: '38px',
+    borderRadius: '50%',
+    backgroundColor: 'white',
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    zIndex: 2,
+    border: '1px solid rgba(0, 0, 0, 0.2)',
+  };
+
+  const textStyle: React.CSSProperties = {
+    position: 'absolute',
+    left: '40px',
+    top: '50%',
+    transform: isScrolled 
+  ? `translateY(-50%) ${isHovered ? 'translateX(0)' : 'translateX(-100%)'}`
+  : 'translateY(-50%)',
+    whiteSpace: 'nowrap',
+    transition: 'opacity 0.3s ease, transform 0.3s ease',
+    opacity: isScrolled ? (isHovered ? 1 : 0) : 1,
+    paddingLeft: '10px',
+    color: 'black',
+    fontFamily: 'Arial, sans-serif',
+    fontSize: '14px',
   };
 
   return (
     <Box style={boxStyle}>
-      <Flex justify="between" align="center">
-        <Button onClick={onClearAllFields} style={semiTransparentButtonStyle}>
-          Clear All Fields
-        </Button>
-        <Button onClick={onToggle} style={semiTransparentButtonStyle}>
-          {expanded ? 'Hide' : 'Expand'}
-        </Button>
+      <Flex 
+        direction={isScrolled ? "column" : "row"} 
+        justify={isScrolled ? "start" : "between"} 
+        align={isScrolled ? "start" : "center"}
+        gap={isScrolled ? "2" : "0"}
+      >
+        <button 
+          onClick={onClearAllFields} 
+          style={clearAllButtonStyle}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <span style={svgContainerStyle}>
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 15 15"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H5H10H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C4.44772 13 4 12.5523 4 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4H10V12H5V4Z"
+                fill="rgba(0, 0, 0, 0.6)"
+                fillRule="evenodd"
+                clipRule="evenodd"
+              />
+            </svg>
+          </span>
+          <span style={textStyle}>Clear All Fields</span>
+        </button>
+        {!isScrolled && (
+          <Button onClick={onToggle} style={semiTransparentButtonStyle}>
+            {expanded ? 'Hide' : 'Expand'}
+          </Button>
+        )}
       </Flex>
     </Box>
   );
 };
+
 
 const customStyles = `
 
@@ -220,6 +314,8 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
   const [focusedTextArea, setFocusedTextArea] = useState<string | null>(null);
   const [flickerState, setFlickerState] = useState<'off' | 'on1' | 'off2' | 'on2'>('off');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [hasScrolled, setHasScrolled] = useState(false);
+
 
   const { register, handleSubmit } = useForm();
 
@@ -459,27 +555,36 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
   const [wrapperWidth, setWrapperWidth] = useState(0);
   const [drawerExpanded, setDrawerExpanded] = useState(false);
 
-  const toggleDrawer = () => {
-    setDrawerExpanded(!drawerExpanded);
-  };
-  
   useEffect(() => {
+    const handleScroll = () => {
+      if (wrapperRef.current) {
+        const rect = wrapperRef.current.getBoundingClientRect();
+        setHasScrolled(window.scrollY > rect.top);
+      }
+    };
+
     const updateWrapperDimensions = () => {
       if (wrapperRef.current) {
         const rect = wrapperRef.current.getBoundingClientRect();
-        setWrapperTopPosition(rect.top + window.scrollY);
         setWrapperWidth(rect.width);
       }
     };
 
-    updateWrapperDimensions();
+    window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', updateWrapperDimensions);
-    window.addEventListener('scroll', updateWrapperDimensions);
+
+    // Initial call to set dimensions
+    updateWrapperDimensions();
+
     return () => {
+      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', updateWrapperDimensions);
-      window.removeEventListener('scroll', updateWrapperDimensions);
     };
   }, []);
+
+  const toggleDrawer = () => {
+    setDrawerExpanded(!drawerExpanded);
+  };
 
   const gradientStyle: CSSProperties = {
     background: 'linear-gradient(90deg, #fea57e 0%,#fea57e 20%, #fad496 55%, #fe854f 100%)',
@@ -572,7 +677,8 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                     onClearAllFields={clearAllFields}
                     semiTransparentButtonStyle={semiTransparentButtonStyle}
                     onToggle={toggleDrawer}
-                    
+                    isScrolled={hasScrolled && expanded}
+                    wrapperWidth={wrapperWidth}
                   />
                 </Box>
                 <Box 
