@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, CSSProperties } from 'react';
+import React, { useState, useEffect, useRef, useCallback, CSSProperties } from 'react';
 import { Amplify } from 'aws-amplify';
 import Header from './header';
 import { useForm } from "react-hook-form";
@@ -18,6 +18,7 @@ import whiteOverlay from './Head-color with text.png';
 Amplify.configure(config);
 
 
+
 interface FloatingBoxProps {
   expanded: boolean;
   onClearAllFields: () => void;
@@ -25,6 +26,7 @@ interface FloatingBoxProps {
   onToggle: () => void;
   isScrolled: boolean;
   wrapperWidth: number;
+  scrollPosition: number;
 }
 
 const FloatingBox: React.FC<FloatingBoxProps> = ({ 
@@ -33,7 +35,8 @@ const FloatingBox: React.FC<FloatingBoxProps> = ({
   semiTransparentButtonStyle,
   onToggle,
   isScrolled,
-  wrapperWidth
+  wrapperWidth,
+  scrollPosition
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -59,12 +62,12 @@ const FloatingBox: React.FC<FloatingBoxProps> = ({
     backdropFilter: 'blur(10px)',
     boxShadow: '0 -4px 6px rgba(0, 0, 0, 0.1)',
     borderRadius: '24px',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1), top 0.1s linear', // Added smooth transition for top property
     position: 'absolute',
     zIndex: 1,
     ...(isScrolled
       ? {
-          top: '15px',
+          top: `${scrollPosition}px`,
           left: '102%',
           width: 'auto',
         }
@@ -191,6 +194,14 @@ textarea, input, button {
 
   }
 `;
+
+const debounce = (func: (...args: any[]) => void, wait: number) => {
+  let timeout: NodeJS.Timeout | null = null;
+  return (...args: any[]) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
 
 
 export function Home({ signOut, user }: WithAuthenticatorProps) {
@@ -338,6 +349,20 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
   const [flickerState, setFlickerState] = useState<'off' | 'on1' | 'off2' | 'on2'>('off');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
+
+  const handleScroll = useCallback(
+    debounce(() => {
+      if (wrapperRef.current) {
+        const rect = wrapperRef.current.getBoundingClientRect();
+        const newScrollPosition = Math.max(0, window.scrollY - rect.top);
+        setHasScrolled(window.scrollY > rect.top);
+        setScrollPosition(newScrollPosition);
+      }
+    }, 10), // 10ms debounce time
+    []
+  );
 
 
   const { register, handleSubmit } = useForm();
@@ -578,27 +603,34 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
   const [wrapperWidth, setWrapperWidth] = useState(0);
   const [drawerExpanded, setDrawerExpanded] = useState(false);
 
+
+
+
+
   useEffect(() => {
     const handleScroll = () => {
       if (wrapperRef.current) {
         const rect = wrapperRef.current.getBoundingClientRect();
+        const newScrollPosition = Math.max(0, window.scrollY - rect.top);
         setHasScrolled(window.scrollY > rect.top);
+        setScrollPosition(newScrollPosition); // This line is now correctly using setScrollPosition
       }
     };
-
+  
     const updateWrapperDimensions = () => {
       if (wrapperRef.current) {
         const rect = wrapperRef.current.getBoundingClientRect();
         setWrapperWidth(rect.width);
       }
     };
-
+  
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', updateWrapperDimensions);
-
-    // Initial call to set dimensions
+  
+    // Initial call to set dimensions and scroll position
     updateWrapperDimensions();
-
+    handleScroll();
+  
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', updateWrapperDimensions);
@@ -669,20 +701,20 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
               <Flex style={{ width: '100%', justifyContent: 'center', position: 'relative' }}>
               <Flex direction="column" width="90%" maxWidth="1200px" align="center" className="text-areas-background" ref={wrapperRef}>
               <Box
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  borderRadius: '24px',
-                  padding: '32px',
-                  paddingTop: '40px', // Adjust based on how much of the drawer you want to show
-                  backdropFilter: 'blur(10px)',
-                  boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  width: '100%',
-                  margin: '25px 0',
-                  position: 'relative',
-                  zIndex: 2,
-                }}
-              >
+                  style={{
+                    position: 'relative',
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    borderRadius: '24px',
+                    padding: '32px',
+                    paddingTop: '40px',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    width: '100%',
+                    margin: '25px 0',
+                    zIndex: 2,
+                  }}
+>
                 <Box
                   style={{
                     position: 'absolute',
@@ -702,7 +734,9 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                     onToggle={toggleDrawer}
                     isScrolled={hasScrolled && expanded}
                     wrapperWidth={wrapperWidth}
+                    scrollPosition={scrollPosition}
                   />
+                
                 </Box>
                 <Box 
                   style={{ 
