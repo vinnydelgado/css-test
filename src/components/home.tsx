@@ -27,6 +27,7 @@ interface FloatingBoxProps {
   isScrolled: boolean;
   wrapperWidth: number;
   scrollPosition: number;
+  maxScrollPosition: number; // New prop for maximum scroll position
 }
 
 const FloatingBox: React.FC<FloatingBoxProps> = ({ 
@@ -36,7 +37,8 @@ const FloatingBox: React.FC<FloatingBoxProps> = ({
   onToggle,
   isScrolled,
   wrapperWidth,
-  scrollPosition
+  scrollPosition,
+  maxScrollPosition // New prop
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -67,7 +69,7 @@ const FloatingBox: React.FC<FloatingBoxProps> = ({
     zIndex: 1,
     ...(isScrolled
       ? {
-          top: `${scrollPosition}px`,
+          top: `${Math.min(scrollPosition, maxScrollPosition)}px`,
           left: '102%',
           width: 'auto',
         }
@@ -222,101 +224,100 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     S9: '',
   });
 
+
+
+  const [apiError, setApiError] = useState<string | null>(null);
+
   const summary = async (formData: any) => {
-    return await axios.post('https://8y8kvy7r77.execute-api.us-east-1.amazonaws.com/alpha/summary', {
-      "event": "summary",
-      "M": data.M,
-      "T": data.T,
-      "G": data.G,
-      "CQ": data.CQ,
-      "SUM": data.SUM,
-    });
+    console.log("Sending summary request:", formData);
+    try {
+      const response = await axios.post('https://8y8kvy7r77.execute-api.us-east-1.amazonaws.com/alpha/summary', {
+        "event": "summary",
+        ...formData
+      });
+      console.log("Summary response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Summary request error:", error);
+      throw error;
+    }
   }
 
   const story = async (formData: any) => {
-    return await axios.post('https://8y8kvy7r77.execute-api.us-east-1.amazonaws.com/alpha/summary', {
-      "event": "story",
-      "M": data.M,
-      "T": data.T,
-      "G": data.G,
-      "CQ": data.CQ,
-      "SUM": data.SUM,
-      "S1": data.S1,
-      "S2": data.S2,
-      "S3": data.S3,
-      "S4": data.S4,
-      "S5": data.S5,
-      "S6": data.S6,
-      "S7": data.S7,
-      "S8": data.S8,
-      "S9": data.S9
-    });
+    console.log("Sending story request:", formData);
+    try {
+      const response = await axios.post('https://8y8kvy7r77.execute-api.us-east-1.amazonaws.com/alpha/summary', {
+        "event": "story",
+        ...formData
+      });
+      console.log("Story response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Story request error:", error);
+      throw error;
+    }
   }
 
   const mutateSummary = useMutation({
-    mutationFn: (formData: any) => summary(formData),
-    onSuccess: (res: any) => {
-      console.log(res.data);
-      handleChange(res);
+    mutationFn: summary,
+    onSuccess: (data: any) => {
+      console.log("Summary mutation success:", data);
+      handleApiResponse(data);
+      setApiError(null);
     },
     onError: (error: any) => {
-      console.log(error);
+      console.error("Summary mutation error:", error);
+      setApiError("Failed to generate summary. Please try again.");
     },
   });
 
   const mutateStory = useMutation({
-    mutationFn: (formData: any) => story(formData),
-    onSuccess: (res: any) => {
-      console.log(res.data);
-      handleChange(res);
+    mutationFn: story,
+    onSuccess: (data: any) => {
+      console.log("Story mutation success:", data);
+      handleApiResponse({ data });
+      setApiError(null);
     },
     onError: (error: any) => {
-      console.log(error);
+      console.error("Story mutation error:", error);
+      setApiError("Failed to generate story. Please try again.");
     },
   });
 
-  const handleSummary = (e: any) => {
-    console.log(data.SUM);
-    console.log(e);
-
-    const formData = new FormData(e.target);
-
-    mutateSummary.mutate(formData);
+  const handleSummary = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    console.log("Handling summary request with current data:", data);
+    mutateSummary.mutate({
+      ...data,
+      event: "summary"
+    });
   }
-
-  const handleStory = (e: any) => {
-    console.log(e);
-
-    const formData = new FormData(e.target);
-
-    mutateStory.mutate(formData);
+  
+  const handleStory = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("Handling story request with current data:", data);
+    mutateStory.mutate({
+      ...data,
+      event: "story"
+    });
   }
-
-  const handleChange = (res: any) => {
+  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { name, value } = event.target;
+    setData(prevData => {
+      const newData = { ...prevData, [name]: value };
+      console.log("Updated data:", newData);
+      return newData;
+    });
+  }
+  const handleApiResponse = (response: any) => {
+    console.log("Handling API response:", response);
     try {
-      if (res.data.event === "summary") {
-        setData((data) => ({ ...data, SUM: res.data.SUM }));
-      } else {
-        setData((data) => ({
-          ...data,
-          M: res.data.M,
-          T: res.data.T,
-          G: res.data.G,
-          CQ: res.data.CQ,
-          SUM: res.data.SUM,
-          S1: res.data.S1,
-          S2: res.data.S2,
-          S3: res.data.S3,
-          S4: res.data.S4,
-          S5: res.data.S5,
-          S6: res.data.S6,
-          S7: res.data.S7,
-          S8: res.data.S8,
-          S9: res.data.S9,
-        }));
-      }
+      setData(prevData => ({
+        ...prevData,
+        ...response,
+      }));
     } catch (e) {
-      console.log(e);
+      console.error("Error in handleApiResponse:", e);
     }
   }
 
@@ -351,6 +352,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
   const [hasScrolled, setHasScrolled] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [containerHeight, setContainerHeight] = useState(0);
+  const [maxScrollPosition, setMaxScrollPosition] = useState(0);
 
   const handleScroll = useCallback(
     debounce(() => {
@@ -564,12 +566,11 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
             field)}
         </Text>
         <TextArea
-          {...register(field)}
           id={field}
           name={field}
           rows={rows}
           value={data[field as keyof typeof data]}
-          onChange={(event) => setData((data) => ({ ...data, [field]: event.target.value }))}
+          onChange={handleInputChange}
           style={{
             ...getTextAreaStyle(textAreaStyle, field),
             width: '100%',
@@ -613,7 +614,13 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
         const rect = wrapperRef.current.getBoundingClientRect();
         const newScrollPosition = Math.max(0, window.scrollY - rect.top);
         setHasScrolled(window.scrollY > rect.top);
-        setScrollPosition(newScrollPosition); // This line is now correctly using setScrollPosition
+        setScrollPosition(newScrollPosition);
+
+        // Calculate the maximum scroll position
+        const parentHeight = wrapperRef.current.clientHeight;
+        const floatingBoxHeight = 200; // Adjust this value based on your FloatingBox height
+        const newMaxScrollPosition = parentHeight - floatingBoxHeight;
+        setMaxScrollPosition(newMaxScrollPosition);
       }
     };
   
@@ -727,15 +734,16 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                     justifyContent: 'center',
                   }}
                 >
-                  <FloatingBox 
-                    expanded={drawerExpanded} 
-                    onClearAllFields={clearAllFields}
-                    semiTransparentButtonStyle={semiTransparentButtonStyle}
-                    onToggle={toggleDrawer}
-                    isScrolled={hasScrolled && expanded}
-                    wrapperWidth={wrapperWidth}
-                    scrollPosition={scrollPosition}
-                  />
+                    <FloatingBox 
+                      expanded={drawerExpanded} 
+                      onClearAllFields={clearAllFields}
+                      semiTransparentButtonStyle={semiTransparentButtonStyle}
+                      onToggle={toggleDrawer}
+                      isScrolled={hasScrolled && expanded}
+                      wrapperWidth={wrapperWidth}
+                      scrollPosition={scrollPosition}
+                      maxScrollPosition={maxScrollPosition}
+                    />
                 
                 </Box>
                 <Box 
@@ -745,7 +753,7 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                     marginTop: '-10px', // Negative margin to offset the peeking drawer
                   }}
                 >
-                    <form>
+                 <form onSubmit={handleStory}>
                   <Container size="3" align="center">
                     <Box style={whiteContainerStyle}>
                       <Flex direction="column" align="center" style={{ width: '100%' }}>
@@ -761,6 +769,16 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                 <Container size="3" align="center">
                 <Box style={whiteContainerStyle}>
                   {renderTextArea('SUM', 3, '100%')}
+                  <Button 
+                onClick={handleSummary} 
+                type="button" 
+                name="generate_summary" 
+                variant="solid" 
+                style={semiTransparentButtonStyle}
+                disabled={mutateSummary.isLoading}
+              >
+                {mutateSummary.isLoading ? 'Generating...' : 'Generate Summary'}
+              </Button>
             </Box>
                   </Container>
                   <Container size="4" align="center">
@@ -795,9 +813,15 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
                     </Box>
                   </Container>
                   <Flex justify="end">
-                    <Button onClick={(e) => { handleSubmit(handleStory)(e) }} name="generate_story" variant="solid" style={semiTransparentButtonStyle}>
-                      Generate Story
-                    </Button>
+                  <Button 
+              type="submit" 
+              name="generate_story" 
+              variant="solid" 
+              style={semiTransparentButtonStyle}
+              disabled={mutateStory.isLoading}
+            >
+              {mutateStory.isLoading ? 'Generating...' : 'Generate Story'}
+            </Button>
                   </Flex>
                 </form>
               </Box>
