@@ -1,0 +1,90 @@
+.floating-box {
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 24px;
+  }
+  
+  .semi-transparent-button {
+    background-color: white;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    color: black;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+  }
+  
+  .semi-transparent-button:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+    font-family: Arial, sans-serif;
+  }
+
+  .floating-box {
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 24px;
+  }
+  
+  .floating-box-button {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    overflow: hidden;
+    transition: all 0.3s ease, width 0.3s ease;
+    height: 40px;
+    border-radius: 20px;
+    position: relative;
+  }
+  
+  .floating-box-button .svg-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 2;
+    background-color: white;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+  }
+  
+  .floating-box-button .button-text {
+    position: absolute;
+    left: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    transition: opacity 0.5s ease 0.7s, transform 0.5s ease 0.7s;
+    padding-left: 10px;
+    opacity: 0;
+  }
+  
+  .floating-box-button:hover .button-text {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+  
+  .semi-transparent-button {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: #333;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
+    box-shadow: none;
+    transition: all 0.3s ease;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .semi-transparent-button:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+  }
+  
+  .semi-transparent-button:active {
+    transform: translateY(1px);
+  }
