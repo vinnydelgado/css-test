@@ -40,6 +40,23 @@ const debounce = (func: (...args: any[]) => void, wait: number) => {
 };
 
 
+type DataState = {
+  G: string;
+  T: string;
+  M: string;
+  CQ: string;
+  SUM: string;
+  S1: string;
+  S2: string;
+  S3: string;
+  S4: string;
+  S5: string;
+  S6: string;
+  S7: string;
+  S8: string;
+  S9: string;
+};
+
 export function Home({ signOut, user }: WithAuthenticatorProps) {
   const [data, setData] = useState({
     G: '',
@@ -57,6 +74,8 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     S8: '',
     S9: '',
   });
+
+  const [lastGeneratedGenre, setLastGeneratedGenre] = useState<string | null>(null);
 
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -83,18 +102,126 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
         ...formData
       });
       console.log("Story response:", response.data);
-      return response.data;
+      return response;
     } catch (error) {
       console.error("Story request error:", error);
       throw error;
     }
   }
 
+
+  const mutateStory = useMutation({
+    mutationFn: story,
+    onSuccess: (res: any) => {
+      console.log("Story mutation success:", res);
+      setData((data) => ({ ...data,
+        M:res.data.M,
+        T:res.data.T,
+        G:res.data.G,
+        CQ:res.data.CQ,
+        SUM:res.data.SUM,
+        S1:res.data.S1,
+        S2:res.data.S2,
+        S3:res.data.S3,
+        S4:res.data.S4,
+        S5:res.data.S5,
+        S6:res.data.S6,
+        S7:res.data.S7,
+        S8:res.data.S8,
+        S9:res.data.S9
+      }));
+      setApiError(null);
+    },
+    onError: (error: any) => {
+      console.error("Story mutation error:", error);
+      setApiError("Failed to generate story. Please try again.");
+    },
+  });
+  const isFieldBlank = (value: string): boolean => {
+    return value.trim() === '';
+  };
+
+  const getCurrentTextAreaValues = (): DataState => {
+    const newData: DataState = {} as DataState;
+    Object.keys(data).forEach(key => {
+      const element = document.getElementById(key) as HTMLTextAreaElement;
+      newData[key as keyof DataState] = element ? element.value : '';
+    });
+    return newData;
+  };
+
+  const isAllBlank = (): boolean => {
+    const currentData = getCurrentTextAreaValues();
+    return Object.entries(currentData).every(([key, value]) => {
+      const isEmpty = isFieldBlank(value);
+      console.log(`Field ${key} is ${isEmpty ? 'empty' : 'not empty'}. Value: "${value}"`);
+      return isEmpty;
+    });
+  };
+
+  const getRandomGenre = () => {
+    const genres = [
+      "Drama/Comedy",
+      "Drama/Thriller",
+      "Drama/War",
+      "Drama/Mystery",
+      "Drama/Arthouse"
+    ];
+    return genres[Math.floor(Math.random() * genres.length)];
+  };
+
+  const handleSummary = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    
+    let summaryData = getCurrentTextAreaValues();
+
+    console.log("Current data:", summaryData);
+
+    // Check if all fields are blank
+    const allFieldsBlank = isAllBlank();
+
+    console.log("Are all fields blank?", allFieldsBlank);
+
+    // If all fields are blank, set G to a random genre
+    if (allFieldsBlank) {
+      const randomGenre = getRandomGenre();
+      console.log("Assigning random genre:", randomGenre);
+      summaryData = { ...summaryData, G: randomGenre };
+    } else {
+      console.log("Not all fields are blank. Using existing data.");
+    }
+
+    console.log("Final data to be sent:", summaryData);
+
+    mutateSummary.mutate({
+      ...summaryData,
+      event: "summary"
+    });
+  };
+
+  const clearAllFields = () => {
+    const clearedData: DataState = Object.fromEntries(
+      Object.keys(data).map(key => [key, ''])
+    ) as DataState;
+    
+    setData(clearedData);
+    
+    // Clear all text areas in the UI
+    Object.keys(data).forEach(key => {
+      const element = document.getElementById(key) as HTMLTextAreaElement;
+      if (element) {
+        element.value = '';
+      }
+    });
+
+    console.log("All fields cleared:", clearedData);
+  };
+
   const mutateSummary = useMutation({
     mutationFn: summary,
-    onSuccess: (data: any) => {
-      console.log("Summary mutation success:", data);
-      handleApiResponse(data);
+    onSuccess: (responseData: any) => {
+      console.log("Summary mutation success:", responseData);
+      handleApiResponse(responseData);
       setApiError(null);
     },
     onError: (error: any) => {
@@ -103,28 +230,15 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     },
   });
 
-  const mutateStory = useMutation({
-    mutationFn: story,
-    onSuccess: (data: any) => {
-      console.log("Story mutation success:", data);
-      handleApiResponse({ data });
-      setApiError(null);
-    },
-    onError: (error: any) => {
-      console.error("Story mutation error:", error);
-      setApiError("Failed to generate story. Please try again.");
-    },
-  });
-
-  const handleSummary = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    console.log("Handling summary request with current data:", data);
-    mutateSummary.mutate({
-      ...data,
-      event: "summary"
+  const handleApiResponse = (response: any) => {
+    console.log("Handling API response:", response);
+    setData(prevData => {
+      const newData: DataState = { ...prevData, ...response };
+      console.log("Updated data after API response:", newData);
+      return newData;
     });
-  }
-  
+  };
+
   const handleStory = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Handling story request with current data:", data);
@@ -140,17 +254,6 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
       console.log("Updated data:", newData);
       return newData;
     });
-  }
-  const handleApiResponse = (response: any) => {
-    console.log("Handling API response:", response);
-    try {
-      setData(prevData => ({
-        ...prevData,
-        ...response,
-      }));
-    } catch (e) {
-      console.error("Error in handleApiResponse:", e);
-    }
   }
 
   const [wrapperTopPosition, setWrapperTopPosition] = useState(0);
@@ -212,28 +315,6 @@ export function Home({ signOut, user }: WithAuthenticatorProps) {
     S9: 'Resolution'
   });
 
-  const clearAllFields = () => {
-    console.log("clear all fields");
-    setData((data) => ({
-      ...data,
-      M: "",
-      T: "",
-      G: "",
-      CQ: "",
-      SUM: "",
-      S1: "",
-      S2: "",
-      S3: "",
-      S4: "",
-      S5: "",
-      S6: "",
-      S7: "",
-      S8: "",
-      S9: "",
-    }));
-
-
-  };
 
   const renderTextArea = (field: string, rows: number = 1, width: string = '100%') => (
     <TextArea
